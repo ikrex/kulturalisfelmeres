@@ -6,7 +6,7 @@ use App\Models\Survey;
 use App\Models\TemporarySurvey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Str;
 
 class SurveyController extends Controller
 {
@@ -118,4 +118,71 @@ class SurveyController extends Controller
             abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
         }
     }
+
+/**
+ * Ideiglenes kérdőív létrehozása vagy frissítése.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function saveTemporary(Request $request)
+{
+    // Ellenőrizzük, hogy van-e már uuid
+    $uuid = $request->input('uuid');
+
+    if (!$uuid) {
+        // Ha nincs uuid, akkor új kérdőív kezdődött
+        $uuid = (string) Str::uuid();
+    }
+
+    // IP cím lekérdezése
+    $ipAddress = $request->ip();
+
+    try {
+        // Ideiglenes rekord létrehozása, ha nem létezik a TemporarySurvey modell
+        if (!class_exists('App\Models\TemporarySurvey')) {
+            // Ha a modell nem létezik, akkor egyszerűen visszaadjuk az UUID-t
+            return response()->json([
+                'success' => true,
+                'uuid' => $uuid,
+                'message' => 'Test mode: Model not exists but UUID generated'
+            ]);
+        }
+
+        // Ideiglenes rekord mentése vagy frissítése
+        $temporarySurvey = TemporarySurvey::updateOrCreate(
+            ['uuid' => $uuid],
+            [
+                'institution_name' => $request->input('institution_name'),
+                'event_software' => $request->input('event_software'),
+                'statistics_issues' => $request->input('statistics_issues'),
+                'communication_issues' => $request->input('communication_issues'),
+                'event_transparency' => $request->input('event_transparency'),
+                'want_help' => $request->input('want_help'),
+                'contact' => $request->input('contact'),
+                'ip_address' => $ipAddress,
+                'is_completed' => false,
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'uuid' => $uuid,
+            'message' => 'Adatok ideiglenesen mentve'
+        ]);
+    } catch (\Exception $e) {
+        // Naplózzuk a hibát, ha beállított a naplózás
+        if (function_exists('info')) {
+            info('Hiba az ideiglenes mentés során: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Hiba történt az adatok mentése közben: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+
+
 }

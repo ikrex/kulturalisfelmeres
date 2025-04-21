@@ -9,7 +9,7 @@
                 <h1 class="text-4xl font-bold mb-4 text-gray-800">Rólunk</h1>
                 <div class="w-24 h-1 bg-secondary-color mx-auto mb-6"></div>
                 <p class="text-xl text-gray-600">
-                    Megismerheti kutatásunk célját, csapatunkat és azt, hogy miért fontos a munkánk a kulturális szféra számára.
+                    Megismerheti kutatásunk célját és azt, hogy miért fontos a munkánk a kulturális szféra számára.
                 </p>
             </div>
 
@@ -22,7 +22,7 @@
                         ahhoz, hogy betölthessék ezt a szerepet.
                     </p>
                     <p>
-                        Kutatásunk során kiemelten foglalkozunk az alábbi területekkel:
+                        A kutatás során kiemelten foglalkozunk az alábbi területekkel:
                     </p>
                     <ul class="list-disc pl-6 space-y-2">
                         <li>Kulturális intézmények működési hatékonyságának elemzése</li>
@@ -40,20 +40,20 @@
                         <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-primary-color">
                             <div class="flex items-center mb-4">
                                 <div class="h-16 w-16 rounded-full bg-primary-color flex items-center justify-center text-white text-2xl font-bold mr-4">
-                                    KL
+                                    IK
                                 </div>
                                 <div>
-                                    <h3 class="text-xl font-bold">Dr. Kovács László</h3>
+                                    <h3 class="text-xl font-bold">Illés Kálmán</h3>
                                     <p class="text-gray-600">Kutatásvezető</p>
                                 </div>
                             </div>
                             <p class="text-gray-700">
-                                Több mint 15 éves tapasztalattal rendelkezik a kulturális intézmények működésének elemzésében.
+                                Több éves tapasztalattal rendelkezik a kulturális intézmények működésének elemzésében.
                                 Szakterülete a szervezetfejlesztés és a digitális átállás támogatása.
                             </p>
                         </div>
 
-                        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-primary-color">
+                        {{-- <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-primary-color">
                             <div class="flex items-center mb-4">
                                 <div class="h-16 w-16 rounded-full bg-primary-color flex items-center justify-center text-white text-2xl font-bold mr-4">
                                     NT
@@ -67,39 +67,11 @@
                                 Szakmai tapasztalatát számos hazai kulturális intézményben szerezte.
                                 Fő területe a rendezvényszervezés és a kulturális programok hatékony menedzselése.
                             </p>
-                        </div>
+                        </div> --}}
 
-                        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-primary-color">
-                            <div class="flex items-center mb-4">
-                                <div class="h-16 w-16 rounded-full bg-primary-color flex items-center justify-center text-white text-2xl font-bold mr-4">
-                                    SG
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-bold">Dr. Szabó Gábor</h3>
-                                    <p class="text-gray-600">Adatelemző</p>
-                                </div>
-                            </div>
-                            <p class="text-gray-700">
-                                Statisztikai és adatelemzési módszerek specialistája, aki a kulturális szféra adatalapú döntéshozatalát segíti.
-                                Több egyetemmel is együttműködik kutatási programokban.
-                            </p>
-                        </div>
 
-                        <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-primary-color">
-                            <div class="flex items-center mb-4">
-                                <div class="h-16 w-16 rounded-full bg-primary-color flex items-center justify-center text-white text-2xl font-bold mr-4">
-                                    BK
-                                </div>
-                                <div>
-                                    <h3 class="text-xl font-bold">Balogh Katalin</h3>
-                                    <p class="text-gray-600">Kommunikációs szakértő</p>
-                                </div>
-                            </div>
-                            <p class="text-gray-700">
-                                A belső és külső kommunikációs folyamatok fejlesztésével foglalkozik.
-                                Segít az intézményeknek hatékonyabb információáramlási stratégiák kialakításában.
-                            </p>
-                        </div>
+
+
                     </div>
                 </div>
 
@@ -123,19 +95,32 @@
                     </p>
                 </div>
 
-                <div class="mb-12">
+                {{-- <div class="mb-12">
                     <h2 class="text-2xl font-bold mb-6">Partnereink</h2>
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div class="bg-white p-4 rounded shadow-md flex items-center justify-center h-24">
-                            <span class="text-gray-500 font-bold text-lg">Kultúráért Alapítvány</span>
+                            <span class="text-gray-500 font-bold text-lg">Bálint Ágnes Kulturális Központ</span>
                         </div>
                         <div class="bg-white p-4 rounded shadow-md flex items-center justify-center h-24">
-                            <span class="text-gray-500 font-bold text-lg">Nemzeti Művelődési Intézet</span>
+                            <span class="text-gray-500 font-bold text-lg">Flesch Központ</span>
                         </div>
                         <div class="bg-white p-4 rounded shadow-md flex items-center justify-center h-24">
-                            <span class="text-gray-500 font-bold text-lg">Művészeti Kutatóközpont</span>
+                            <span class="text-gray-500 font-bold text-lg">Pestszentimrei Közösségi Ház</span>
                         </div>
                         <div class="bg-white p-4 rounded shadow-md flex items-center justify-center h-24">
-                            <span class="text-gray-500 font-bold text-lg">Digitális Kultúra Egyesület</span>
+                            <span class="text-gray-500 font-bold text-lg">Egressy Gábor Szabadidő Központ</span>
                         </div>
+
+                        <div class="bg-white p-4 rounded shadow-md flex items-center justify-center h-24">
+                            <span class="text-gray-500 font-bold text-lg">Táncsics Mihály Művelődési Ház</span>
+                        </div>
+
+
+                    </div>
+                </div> --}}
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

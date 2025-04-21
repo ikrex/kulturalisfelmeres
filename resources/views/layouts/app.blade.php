@@ -116,7 +116,6 @@
                 </a>
                 <nav>
                     <ul class="flex space-x-6">
-                        <li><a href="{{ route('home') }}" class="text-white hover:text-gray-200">Főoldal</a></li>
                         <li><a href="{{ route('survey.form') }}" class="text-white hover:text-gray-200">Kérdőív</a></li>
                         <li><a href="{{ route('about') }}" class="text-white hover:text-gray-200">Rólunk</a></li>
                         <li><a href="{{ route('contact') }}" class="text-white hover:text-gray-200">Kapcsolat</a></li>

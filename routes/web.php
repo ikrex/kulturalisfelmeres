@@ -18,7 +18,8 @@ Route::get('/rolunk', [HomeController::class, 'about'])->name('about');
 Route::get('/kerdoiv', [SurveyController::class, 'showForm'])->name('survey.form');
 Route::post('/kerdoiv/bekuldese', [SurveyController::class, 'submitForm'])->name('survey.submit');
 Route::get('/kerdoiv/koszonjuk', [SurveyController::class, 'showThanks'])->name('survey.thanks');
-Route::post('/kerdoiv/ideiglenes-mentes', [TemporarySurveyController::class, 'saveTemporary'])->name('survey.temporary.save');
+// Route::post('/kerdoiv/ideiglenes-mentes', [TemporarySurveyController::class, 'saveTemporary'])->name('survey.temporary.save');
+Route::post('/kerdoiv/ideiglenes-mentes', [SurveyController::class, 'saveTemporary'])->name('survey.temporary.save');
 
 // Kapcsolat útvonalak
 Route::get('/kapcsolat', [ContactController::class, 'showContactForm'])->name('contact');

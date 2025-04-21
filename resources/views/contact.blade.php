@@ -13,12 +13,12 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                <div class="bg-gray-50 p-8 rounded-lg shadow-md cultural-border">
-                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Elérhetőségeink</h2>
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-8 mb-12">
+                {{-- <div class="bg-gray-50 p-8 rounded-lg shadow-md cultural-border">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Elérhetőségeink</h2> --}}
 
-                    <div class="space-y-6">
-                        <div class="flex items-start">
+                    {{-- <div class="space-y-6"> --}}
+                        {{-- <div class="flex items-start">
                             <div class="flex-shrink-0 h-6 w-6 text-secondary-color mt-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -28,9 +28,9 @@
                                 <h3 class="text-lg font-semibold text-gray-800">E-mail</h3>
                                 <p class="text-gray-600">info@kulturaliskutatas.hu</p>
                             </div>
-                        </div>
+                        </div> --}}
 
-                        <div class="flex items-start">
+                        {{-- <div class="flex items-start">
                             <div class="flex-shrink-0 h-6 w-6 text-secondary-color mt-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -40,9 +40,9 @@
                                 <h3 class="text-lg font-semibold text-gray-800">Telefon</h3>
                                 <p class="text-gray-600">+36 1 234 5678</p>
                             </div>
-                        </div>
+                        </div> --}}
 
-                        <div class="flex items-start">
+                        {{-- <div class="flex items-start">
                             <div class="flex-shrink-0 h-6 w-6 text-secondary-color mt-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -53,9 +53,9 @@
                                 <h3 class="text-lg font-semibold text-gray-800">Iroda</h3>
                                 <p class="text-gray-600">1052 Budapest, Kultúra utca 123.</p>
                             </div>
-                        </div>
+                        </div> --}}
 
-                        <div class="flex items-start">
+                        {{-- <div class="flex items-start">
                             <div class="flex-shrink-0 h-6 w-6 text-secondary-color mt-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -65,10 +65,10 @@
                                 <h3 class="text-lg font-semibold text-gray-800">Nyitvatartás</h3>
                                 <p class="text-gray-600">Hétfő - Péntek: 9:00 - 17:00</p>
                             </div>
-                        </div>
-                    </div>
+                        </div> --}}
+                    {{-- </div> --}}
 
-                    <div class="mt-8">
+                    {{-- <div class="mt-8">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">Kövessen minket</h3>
                         <div class="flex space-x-4">
                             <a href="#" class="text-secondary-color hover:text-opacity-80 transition">
@@ -87,8 +87,8 @@
                                 </svg>
                             </a>
                         </div>
-                    </div>
-                </div>
+                    </div> --}}
+                {{-- </div> --}}
 
                 <div class="bg-gray-50 p-8 rounded-lg shadow-md cultural-border">
                     <h2 class="text-2xl font-bold mb-6 text-gray-800">Küldjön üzenetet</h2>
@@ -160,7 +160,7 @@
                 </div>
             </div>
 
-            <div class="bg-white p-8 rounded-lg shadow-md mb-12">
+            {{-- <div class="bg-white p-8 rounded-lg shadow-md mb-12">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">Irodánk helye</h2>
                 <div class="h-80 w-full bg-gray-200 rounded relative overflow-hidden">
                     <!-- Itt egy térképet jelenítünk meg, de most csak egy placeholder-t használunk -->
@@ -168,7 +168,7 @@
                         <p class="text-gray-600">Térkép betöltése...</p>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <div class="bg-gray-50 p-8 rounded-lg shadow-md cultural-border">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">Gyakran Ismételt Kérdések</h2>
@@ -182,7 +182,7 @@
                             </svg>
                         </button>
                         <div class="mt-2 text-gray-600">
-                            <p>A kutatás adatgyűjtési fázisa 2025. április 30-ig tart, az eredmények feldolgozása és közzététele 2025 júniusára várható.</p>
+                            <p>A kutatás adatgyűjtési fázisa 2025. április 30-ig tart, az eredmények feldolgozása és közzététele 2025 júniusára várható azok számára, akik kitöltötték az űrlapot.</p>
                         </div>
                     </div>
 
