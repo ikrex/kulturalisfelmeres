@@ -24,6 +24,13 @@ class Survey extends Model
         'want_help',
         'contact',
         'ip_address',
+        // Új mezők a radiogroup-ok számára
+        'info_flow_issues',
+        'info_flow_issues_other_text',
+        'event_tracking_benefits',
+        'event_tracking_benefits_other_text',
+        'stats_benefits',
+        'stats_benefits_other_text',
     ];
 
     /**

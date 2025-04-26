@@ -11,17 +11,11 @@ class ContactFormMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * A kapcsolati űrlap adatai.
-     *
-     * @var array
-     */
     public $data;
 
     /**
-     * Új példány létrehozása.
+     * Create a new message instance.
      *
-     * @param  array  $data
      * @return void
      */
     public function __construct(array $data)
@@ -30,19 +24,13 @@ class ContactFormMail extends Mailable
     }
 
     /**
-     * Az üzenet felépítése.
+     * Build the message.
      *
      * @return $this
      */
     public function build()
     {
-        return $this->subject('Új kapcsolati űrlap: ' . $this->data['subject'])
-                    ->view('emails.contact-form')
-                    ->with([
-                        'name' => $this->data['name'],
-                        'email' => $this->data['email'],
-                        'subject' => $this->data['subject'],
-                        'message' => $this->data['message'],
-                    ]);
+        return $this->subject('Új kapcsolati űrlap üzenet: ' . $this->data['subject'])
+                    ->view('emails.contact-form');
     }
 }
