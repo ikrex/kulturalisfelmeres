@@ -26,6 +26,17 @@ Route::post('/kerdoiv/ideiglenes-mentes', [SurveyController::class, 'saveTempora
 Route::get('/kapcsolat', [ContactController::class, 'showContactForm'])->name('contact');
 Route::post('/kapcsolat/kuldes', [ContactController::class, 'sendContactForm'])->name('contact.send');
 
+
+
+// web.php fájlban, a többi route mellett
+
+// Profil szerkesztése
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+});
+
+
 // Auth útvonalak (Laravel 12-es szintaxissal)
 // Az auth útvonalakat a routes/auth.php fájlba illesztjük
 // Ezt a Laravel 12 telepítő automatikusan hozzáadja
@@ -34,20 +45,32 @@ Route::post('/kapcsolat/kuldes', [ContactController::class, 'sendContactForm'])-
 Auth::routes();
 // Admin útvonalak
 // Laravel 12-ben a middleware beállítását közvetlenül használjuk
-// Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
-    // Irányítópult
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+// Admin dashboard
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
 
-    // Beküldött kérdőívek
-    Route::get('/surveys', [SurveyController::class, 'adminIndex'])->name('surveys.index');
-    Route::get('/surveys/{id}', [SurveyController::class, 'adminShow'])->name('surveys.show');
-    Route::get('/surveys/export', [SurveyController::class, 'export'])->name('surveys.export');
+    // Kérdőívek kezelése
+    Route::get('/surveys', [App\Http\Controllers\AdminController::class, 'surveys'])->name('surveys');
+    Route::get('/surveys/{id}', [App\Http\Controllers\AdminController::class, 'showSurvey'])->name('surveys.show');
+    Route::delete('/surveys/{id}', [App\Http\Controllers\AdminController::class, 'destroySurvey'])->name('surveys.destroy');
+    Route::get('/surveys/export', [App\Http\Controllers\AdminController::class, 'exportSurveys'])->name('surveys.export');
 
-    // Ideiglenes kérdőívek
-    Route::get('/temporary-surveys', [TemporarySurveyController::class, 'adminIndex'])->name('temporary-surveys.index');
-    Route::get('/temporary-surveys/{uuid}', [TemporarySurveyController::class, 'adminShow'])->name('temporary-surveys.show');
+    // Folyamatban lévő kitöltések
+    Route::get('/temporary-surveys', [App\Http\Controllers\AdminController::class, 'temporarySurveys'])->name('temporary-surveys');
+    Route::get('/temporary-surveys/{id}', [App\Http\Controllers\AdminController::class, 'showTemporarySurvey'])->name('temporary-surveys.show');
+    Route::delete('/temporary-surveys/{id}', [App\Http\Controllers\AdminController::class, 'destroyTemporarySurvey'])->name('temporary-surveys.destroy');
 
-    // Felhasználók
-    Route::resource('users', UserController::class);
+    // Felhasználók kezelése
+    Route::get('/users', [App\Http\Controllers\AdminController::class, 'users'])->name('users');
+    Route::get('/users/{id}', [App\Http\Controllers\AdminController::class, 'showUser'])->name('users.show');
+    Route::delete('/users/{id}', [App\Http\Controllers\AdminController::class, 'destroyUser'])->name('users.destroy');
+    Route::post('/users/{id}/make-admin', [App\Http\Controllers\AdminController::class, 'makeAdmin'])->name('users.make-admin');
+    Route::post('/users/{id}/remove-admin', [App\Http\Controllers\AdminController::class, 'removeAdmin'])->name('users.remove-admin');
+
+    // Statisztikák
+    Route::get('/statistics', [App\Http\Controllers\AdminController::class, 'statistics'])->name('statistics');
+
+    // Beállítások
+    Route::get('/settings', [App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
+    Route::post('/settings', [App\Http\Controllers\AdminController::class, 'updateSettings'])->name('settings.update');
 });

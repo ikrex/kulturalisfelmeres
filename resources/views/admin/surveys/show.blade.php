@@ -1,149 +1,128 @@
 @extends('layouts.admin')
 
-@section('title', 'Kérdőív részletei')
+@section('title', 'Kérdőív megtekintése')
 
 @section('content')
-<div class="container mx-auto max-w-5xl px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Kérdőív részletei</h1>
-        <a href="{{ route('admin.surveys.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded transition">
-            Vissza a listához
-        </a>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="p-6 border-b">
-            <div class="flex justify-between">
-                <h2 class="text-xl font-semibold text-gray-800">{{ $survey->institution_name }}</h2>
-                <span class="text-sm text-gray-500">Kitöltve: {{ $survey->created_at->format('Y.m.d. H:i') }}</span>
-            </div>
-            <div class="mt-2 text-sm text-gray-600">
-                <span class="mr-4">UUID: {{ $survey->uuid }}</span>
-                <span>IP: {{ $survey->ip_address }}</span>
-            </div>
-        </div>
-
-        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="col-span-1 md:col-span-2">
-                <h3 class="font-semibold text-gray-700 mb-2">Intézmény neve</h3>
-                <p class="bg-gray-100 p-3 rounded">{{ $survey->institution_name }}</p>
-            </div>
-
-            <div>
-                <h3 class="font-semibold text-gray-700 mb-2">Használt rendezvényszervező szoftver(ek)</h3>
-                <p class="bg-gray-100 p-3 rounded min-h-[60px]">{{ $survey->event_software ?: 'Nincs megadva' }}</p>
-            </div>
-
-            <div>
-                <h3 class="font-semibold text-gray-700 mb-2">Nyitott tanácsadásra?</h3>
-                <p class="bg-gray-100 p-3 rounded min-h-[60px]">{{ ucfirst($survey->want_help) }}</p>
-            </div>
-
-            <div>
-                <h3 class="font-semibold text-gray-700 mb-2">Elérhetőség</h3>
-                <p class="bg-gray-100 p-3 rounded min-h-[60px]">{{ $survey->contact ?: 'Nincs megadva' }}</p>
-            </div>
-
-            <!-- Új mezők: Információáramlás -->
-            <div class="col-span-1 md:col-span-2">
-                <h3 class="font-semibold text-gray-700 mb-2">Információáramlási problémák</h3>
-                @if($survey->info_flow_issues)
-                    <div class="bg-gray-100 p-3 rounded min-h-[60px]">
-                        @switch($survey->info_flow_issues)
-                            @case('telephelyek')
-                                <p>Eltérő telephelyeken dolgoznak a kollégák</p>
-                                @break
-                            @case('munkaidő')
-                                <p>A kollégák munkaideje nem fedi egymást, nem találkoznak személyesen</p>
-                                @break
-                            @case('félreértések')
-                                <p>Félreértések a szóbeli kommunikáció során</p>
-                                @break
-                            @case('online')
-                                <p>A program segíti az online munkavégzést (kismamák, egyéb családi problémák esetén, családbarát munkahely kialakítás)</p>
-                                @break
-                            @case('other')
-                                <p><strong>Egyéb:</strong> {{ $survey->info_flow_issues_other_text }}</p>
-                                @break
-                            @default
-                                <p>{{ $survey->info_flow_issues }}</p>
-                        @endswitch
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h2 class="m-0 font-weight-bold">Kérdőív #{{ $survey->id }}</h2>
+                    <div>
+                        <a href="{{ route('admin.surveys') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Vissza a listához
+                        </a>
                     </div>
-                @else
-                    <p class="bg-gray-100 p-3 rounded min-h-[60px]">Nincs megadva</p>
-                @endif
-            </div>
-
-            <!-- Új mezők: Rendezvénykövetés előnyei -->
-            <div class="col-span-1 md:col-span-2">
-                <h3 class="font-semibold text-gray-700 mb-2">Visszakereshető rendezvény előnyei</h3>
-                @if($survey->event_tracking_benefits)
-                    <div class="bg-gray-100 p-3 rounded min-h-[60px]">
-                        @switch($survey->event_tracking_benefits)
-                            @case('partner_változás')
-                                <p>Rendezvény évek óta ugyanaz, de pl. a partner neve (szerződő fél) változik</p>
-                                @break
-                            @case('munkakör_átadás')
-                                <p>Kilépés esetén egyszerűsíti a munkakör átadását</p>
-                                @break
-                            @case('betegség')
-                                <p>Betegség esetén sincs fennakadás, hiszen látjuk, hol tart a rendezvény szervezése</p>
-                                @break
-                            @case('other')
-                                <p><strong>Egyéb:</strong> {{ $survey->event_tracking_benefits_other_text }}</p>
-                                @break
-                            @default
-                                <p>{{ $survey->event_tracking_benefits }}</p>
-                        @endswitch
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Általános adatok</div>
+                                            <div class="mb-0">
+                                                <p><strong>Intézmény neve:</strong> {{ $survey->institution_name }}</p>
+                                                <p><strong>Rendezvény szoftver:</strong> {{ $survey->event_software }}</p>
+                                                <p><strong>Kapcsolat:</strong> {{ $survey->contact ?? 'Nincs megadva' }}</p>
+                                                <p><strong>Segítséget szeretne:</strong> {{ $survey->want_help }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Kérdőív adatai</div>
+                                            <div class="mb-0">
+                                                <p><strong>Azonosító:</strong> #{{ $survey->id }}</p>
+                                                <p><strong>Kitöltés dátuma:</strong> {{ $survey->created_at->format('Y.m.d. H:i') }}</p>
+                                                <p><strong>IP cím:</strong> {{ $survey->ip_address }}</p>
+                                                <p><strong>UUID:</strong> {{ $survey->uuid }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                @else
-                    <p class="bg-gray-100 p-3 rounded min-h-[60px]">Nincs megadva</p>
-                @endif
-            </div>
 
-            <!-- Új mezők: Statisztika, kimutatás előnyei -->
-            <div class="col-span-1 md:col-span-2">
-                <h3 class="font-semibold text-gray-700 mb-2">Statisztika, kimutatás, BESZÁMOLÓ előnyei</h3>
-                @if($survey->stats_benefits)
-                    <div class="bg-gray-100 p-3 rounded min-h-[60px]">
-                        @switch($survey->stats_benefits)
-                            @case('friss_vélemény')
-                                <p>Év közben frissen írjuk a véleményt</p>
-                                @break
-                            @case('több_kolléga')
-                                <p>Több kolléga beszámolója rögzíthető</p>
-                                @break
-                            @case('ksh_szűrés')
-                                <p>Év végén már csak szűrni kell a KSH adatokat</p>
-                                @break
-                            @case('nincs_tévedés')
-                                <p>Szinte nulla a tévedés esélye</p>
-                                @break
-                            @case('other')
-                                <p><strong>Egyéb:</strong> {{ $survey->stats_benefits_other_text }}</p>
-                                @break
-                            @default
-                                <p>{{ $survey->stats_benefits }}</p>
-                        @endswitch
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Válaszok</h6>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="font-weight-bold">Problémák és nehézségek</h5>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th width="30%">Statisztikai problémák</th>
+                                            <td>{{ $survey->statistics_issues ?? 'Nincs megadva' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Kommunikációs problémák</th>
+                                            <td>{{ $survey->communication_issues ?? 'Nincs megadva' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Rendezvény átláthatóság</th>
+                                            <td>{{ $survey->event_transparency ?? 'Nincs megadva' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Információáramlás problémák</th>
+                                            <td>
+                                                {{ $survey->info_flow_issues ?? 'Nincs megadva' }}
+                                                @if($survey->info_flow_issues_other_text)
+                                                    <br><strong>Egyéb magyarázat:</strong> {{ $survey->info_flow_issues_other_text }}
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h5 class="font-weight-bold">Előnyök és lehetőségek</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <th width="30%">Rendezvény követés előnyei</th>
+                                            <td>
+                                                {{ $survey->event_tracking_benefits ?? 'Nincs megadva' }}
+                                                @if($survey->event_tracking_benefits_other_text)
+                                                    <br><strong>Egyéb magyarázat:</strong> {{ $survey->event_tracking_benefits_other_text }}
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Statisztikai előnyök</th>
+                                            <td>
+                                                {{ $survey->stats_benefits ?? 'Nincs megadva' }}
+                                                @if($survey->stats_benefits_other_text)
+                                                    <br><strong>Egyéb magyarázat:</strong> {{ $survey->stats_benefits_other_text }}
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                @else
-                    <p class="bg-gray-100 p-3 rounded min-h-[60px]">Nincs megadva</p>
-                @endif
-            </div>
-
-            <div class="col-span-1 md:col-span-2">
-                <h3 class="font-semibold text-gray-700 mb-2">Statisztikák, kimutatások nehézségei</h3>
-                <p class="bg-gray-100 p-3 rounded min-h-[60px]">{{ $survey->statistics_issues ?: 'Nincs megadva' }}</p>
-            </div>
-
-            <div class="col-span-1 md:col-span-2">
-                <h3 class="font-semibold text-gray-700 mb-2">Információáramlási és szervezési kihívások</h3>
-                <p class="bg-gray-100 p-3 rounded min-h-[60px]">{{ $survey->communication_issues ?: 'Nincs megadva' }}</p>
-            </div>
-
-            <div class="col-span-1 md:col-span-2">
-                <h3 class="font-semibold text-gray-700 mb-2">Események átláthatósága és dokumentálása</h3>
-                <p class="bg-gray-100 p-3 rounded min-h-[60px]">{{ $survey->event_transparency ?: 'Nincs megadva' }}</p>
+                </div>
             </div>
         </div>
     </div>

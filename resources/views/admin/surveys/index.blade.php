@@ -1,129 +1,87 @@
 @extends('layouts.admin')
 
-@section('title', 'Kitöltött kérdőívek')
+@section('title', 'Kérdőívek listája')
 
 @section('content')
-<div class="container mx-auto max-w-6xl px-4 py-8">
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Kitöltött kérdőívek</h1>
-        <p class="text-gray-600 mt-2">Összesen: {{ $surveys->total() }} kitöltés</p>
-    </div>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h2 class="m-0 font-weight-bold">Kérdőívek listája</h2>
+                    <div>
+                        <a href="{{ route('admin.surveys.export') }}" class="btn btn-success">
+                            <i class="fas fa-file-export"></i> Exportálás CSV-be
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="surveysTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Intézmény neve</th>
+                                    <th>Rendezvény szoftver</th>
+                                    <th>Kapcsolat</th>
+                                    <th>Létrehozva</th>
+                                    <th>Segítséget szeretne</th>
+                                    <th>Műveletek</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($surveys as $survey)
+                                <tr>
+                                    <td>{{ $survey->id }}</td>
+                                    <td>{{ $survey->institution_name }}</td>
+                                    <td>{{ $survey->event_software }}</td>
+                                    <td>{{ $survey->contact ?? 'Nincs megadva' }}</td>
+                                    <td>{{ $survey->created_at->format('Y.m.d. H:i') }}</td>
+                                    <td>{{ $survey->want_help }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.surveys.show', $survey->id) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> Megtekintés
+                                        </a>
+                                        <form action="{{ route('admin.surveys.destroy', $survey->id) }}" method="POST" class="d-inline-block">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Biztosan törölni szeretné ezt a kérdőívet?')">
+                                                <i class="fas fa-trash"></i> Törlés
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="text-center">Nincs még kitöltött kérdőív.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
 
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Intézmény neve
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Információáramlás
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Visszakereshető rendezvény
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Statisztika előnye
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Kitöltve
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Műveletek
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach ($surveys as $survey)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $survey->institution_name }}</div>
-                            <div class="text-sm text-gray-500">{{ $survey->contact ?: 'Nincs elérhetőség' }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
-                                @switch($survey->info_flow_issues)
-                                    @case('telephelyek')
-                                        <span>Eltérő telephelyek</span>
-                                        @break
-                                    @case('munkaidő')
-                                        <span>Eltérő munkaidő</span>
-                                        @break
-                                    @case('félreértések')
-                                        <span>Félreértések</span>
-                                        @break
-                                    @case('online')
-                                        <span>Online munkavégzés</span>
-                                        @break
-                                    @case('other')
-                                        <span>Egyéb</span>
-                                        @break
-                                    @default
-                                        <span>-</span>
-                                @endswitch
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
-                                @switch($survey->event_tracking_benefits)
-                                    @case('partner_változás')
-                                        <span>Partner változás</span>
-                                        @break
-                                    @case('munkakör_átadás')
-                                        <span>Munkakör átadás</span>
-                                        @break
-                                    @case('betegség')
-                                        <span>Betegség kezelése</span>
-                                        @break
-                                    @case('other')
-                                        <span>Egyéb</span>
-                                        @break
-                                    @default
-                                        <span>-</span>
-                                @endswitch
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">
-                                @switch($survey->stats_benefits)
-                                    @case('friss_vélemény')
-                                        <span>Friss vélemények</span>
-                                        @break
-                                    @case('több_kolléga')
-                                        <span>Kollégák beszámolói</span>
-                                        @break
-                                    @case('ksh_szűrés')
-                                        <span>KSH adatok szűrése</span>
-                                        @break
-                                    @case('nincs_tévedés')
-                                        <span>Nincs tévedés</span>
-                                        @break
-                                    @case('other')
-                                        <span>Egyéb</span>
-                                        @break
-                                    @default
-                                        <span>-</span>
-                                @endswitch
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $survey->created_at->format('Y.m.d.') }}</div>
-                            <div class="text-sm text-gray-500">{{ $survey->created_at->format('H:i') }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('admin.surveys.show', $survey->id) }}" class="text-primary-color hover:text-primary-color-dark">
-                                Részletek
-                            </a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $surveys->links() }}
+                    <div class="mt-4">
+                        {{ $surveys->links() }}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        $('#surveysTable').DataTable({
+            "paging": false,
+            "info": false,
+            "order": [[ 0, "desc" ]],
+            "language": {
+                "search": "Keresés:",
+                "zeroRecords": "Nincs találat",
+            }
+        });
+    });
+</script>
 @endsection

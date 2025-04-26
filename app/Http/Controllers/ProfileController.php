@@ -8,34 +8,46 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Show the user's profile.
      */
-    public function edit(Request $request): View
+    public function edit()
     {
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => Auth::user(),
         ]);
     }
 
     /**
-     * Update the user's profile information.
+     * Update the user's profile.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $user = Auth::user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'current_password' => ['nullable', 'required_with:password', 'current_password'],
+            'password' => ['nullable', 'required_with:current_password', 'confirmed', 'min:8'],
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($validated['password']);
         }
 
-        $request->user()->save();
+        $user->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return redirect()->route('profile.edit')->with('success', 'Profil sikeresen frissítve!');
     }
+
 
     /**
      * Delete the user's account.

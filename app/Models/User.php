@@ -54,4 +54,10 @@ class User extends Authenticatable
     {
         return $this->user_group === 'admin';
     }
+
+
+    public function surveys()
+    {
+        return $this->hasMany(Survey::class);
+    }
 }

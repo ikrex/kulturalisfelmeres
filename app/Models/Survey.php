@@ -40,4 +40,7 @@ class Survey extends Model
     {
         return $this->belongsTo(TemporarySurvey::class, 'uuid', 'uuid');
     }
+
+
+
 }

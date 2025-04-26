@@ -41,4 +41,7 @@ class TemporarySurvey extends Model
     {
         return $this->hasOne(Survey::class, 'uuid', 'uuid');
     }
+
+
+
 }
