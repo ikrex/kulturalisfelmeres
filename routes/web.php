@@ -7,6 +7,7 @@ use App\Http\Controllers\TemporarySurveyController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 // Főoldal
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -29,9 +30,12 @@ Route::post('/kapcsolat/kuldes', [ContactController::class, 'sendContactForm'])-
 // Az auth útvonalakat a routes/auth.php fájlba illesztjük
 // Ezt a Laravel 12 telepítő automatikusan hozzáadja
 
+
+Auth::routes();
 // Admin útvonalak
 // Laravel 12-ben a middleware beállítását közvetlenül használjuk
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+// Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     // Irányítópult
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
