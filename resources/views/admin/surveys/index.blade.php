@@ -11,7 +11,7 @@
                     <h2 class="m-0 font-weight-bold">Kérdőívek listája</h2>
                     <div>
                         <a href="{{ route('admin.surveys.export') }}" class="btn btn-success">
-                            <i class="fas fa-file-export"></i> Exportálás CSV-be
+                            <i class="fas fa-file-export"></i> Exportálás Excelbe
                         </a>
                     </div>
                 </div>

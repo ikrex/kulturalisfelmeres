@@ -13,11 +13,44 @@
         </div>
 
         <h1 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">Köszönjük a válaszait!</h1>
-        <div class="w-24 h-1 bg-secondary-color mx-auto mb-6"></div>
+        <div class="w-24 h-1 bg-secondary-color mx-auto mb-6"> </div>
 
-        <p class="text-xl text-gray-700 mb-8">
+        {{-- <p class="text-xl text-gray-700 mb-8">
             Válaszait sikeresen rögzítettük. Köszönjük, hogy időt szánt a kérdőív kitöltésére.
-        </p>
+        </p> --}}
+
+        @if(session('info'))
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 01-1-1v-4a1 1 0 112 0v4a1 1 0 01-1 1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        {{ session('info') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @else
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700">
+                        Köszönjük, hogy kitöltötte kérdőívünket! Válaszait sikeresen rögzítettük.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
 
         <div class="bg-white rounded-lg shadow-md p-8 mb-10 cultural-border">
             <h2 class="text-2xl font-bold mb-4 text-primary-color">Mi történik ezután?</h2>

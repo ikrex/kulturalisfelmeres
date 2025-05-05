@@ -8,6 +8,12 @@
  * Ez a kód a Laravel 12-vel kompatibilis CSRF kezelést is tartalmazza
  */
 document.addEventListener('DOMContentLoaded', function() {
+    let isFormSubmitted = false;
+    form.addEventListener('submit', function() {
+        isFormSubmitted = true;
+        console.log('Form beküldve, ideiglenes mentés letiltva');
+    });
+
     // UUID generálása vagy meglévő használata
     let surveyUuid = document.getElementById('uuid')?.value || '';
 
@@ -57,6 +63,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Ideiglenes mentés funkció
     const saveTemporary = debounce(() => {
+        if (isFormSubmitted) {
+            console.log('Form már beküldve, ideiglenes mentés kihagyva');
+            return;
+        }
+
         // Az adatokat csak akkor küldjük el, ha legalább egy mező ki van töltve
         const form = document.getElementById('survey-form');
         const formData = new FormData(form);
@@ -64,6 +75,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // UUID hozzáadása, ha van
         if (surveyUuid) {
             formData.append('uuid', surveyUuid);
+        }
+
+        // Követőkód hozzáadása, ha van
+        const trackingCode = document.getElementById('tracking_code')?.value;
+        if (trackingCode) {
+            formData.append('tracking_code', trackingCode);
         }
 
         // Teljes URL létrehozása, hogy biztosan a megfelelő helyre menjen a kérés
@@ -123,6 +140,28 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Ideiglenes mentés inicializálva. Endpoint:', window.location.origin + '/kerdoiv/ideiglenes-mentes');
 });
 </script>
+
+<!-- Intézmény adatok előtöltése, ha van intézmény -->
+@if(isset($institution))
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Intézmény nevének előtöltése
+        var institutionNameField = document.getElementById('institution_name');
+        if (institutionNameField && !institutionNameField.value) {
+            institutionNameField.value = "{{ $institution->name }}";
+        }
+
+        // Email cím előtöltése
+        var contactField = document.getElementById('contact');
+        if (contactField && !contactField.value) {
+            contactField.value = "{{ $institution->email }}";
+        }
+    });
+    </script>
+@endif
+
+
+
 @endpush
 
 @section('content')
@@ -162,14 +201,10 @@ document.addEventListener('DOMContentLoaded', function() {
         @csrf
         <input type="hidden" name="uuid" id="uuid" value="{{ $uuid ?? '' }}">
 
-        {{-- <div class="bg-blue-50 p-3 rounded border border-blue-100 mb-4">
-            <div class="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-                <span class="text-blue-800 text-sm">Kitöltés közben automatikusan mentjük az adatokat - bármikor visszatérhet később a kitöltés folytatásához.</span>
-            </div>
-        </div> --}}
+        <!-- Követőkód hozzáadása a formhoz -->
+        @if(isset($trackingCode))
+            <input type="hidden" name="tracking_code" id="tracking_code" value="{{ $trackingCode }}">
+        @endif
 
         <div>
             <label for="institution_name" class="block font-semibold text-gray-700 mb-1">Intézmény neve<span class="text-red-500">*</span></label>
@@ -338,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <p class="text-gray-700">
-            A kitöltési határidő: <strong class="text-secondary-color">2025. április 30.</strong>
+            A kitöltési határidő: <strong class="text-secondary-color">2025. május 30 (péntek).</strong>
         </p>
     </div>
 </div>

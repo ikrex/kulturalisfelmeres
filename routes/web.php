@@ -27,6 +27,12 @@ Route::get('/kapcsolat', [ContactController::class, 'showContactForm'])->name('c
 Route::post('/kapcsolat/kuldes', [ContactController::class, 'sendContactForm'])->name('contact.send');
 
 
+// Nyomkövető útvonalak
+Route::get('/t/img/{code}', [App\Http\Controllers\TrackingController::class, 'trackEmail'])->name('tracking.email');
+Route::get('/t/survey/{code}', [App\Http\Controllers\TrackingController::class, 'redirectToSurvey'])->name('tracking.survey');
+
+
+
 
 // web.php fájlban, a többi route mellett
 
@@ -35,6 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });
+
+
+
+
 
 
 // Auth útvonalak (Laravel 12-es szintaxissal)
@@ -50,10 +60,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('dashboard');
 
     // Kérdőívek kezelése
+    Route::get('/surveys/export', [App\Http\Controllers\AdminController::class, 'exportSurveys'])->name('surveys.export');
     Route::get('/surveys', [App\Http\Controllers\AdminController::class, 'surveys'])->name('surveys');
     Route::get('/surveys/{id}', [App\Http\Controllers\AdminController::class, 'showSurvey'])->name('surveys.show');
     Route::delete('/surveys/{id}', [App\Http\Controllers\AdminController::class, 'destroySurvey'])->name('surveys.destroy');
-    Route::get('/surveys/export', [App\Http\Controllers\AdminController::class, 'exportSurveys'])->name('surveys.export');
 
     // Folyamatban lévő kitöltések
     Route::get('/temporary-surveys', [App\Http\Controllers\AdminController::class, 'temporarySurveys'])->name('temporary-surveys');
@@ -69,8 +79,28 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Statisztikák
     Route::get('/statistics', [App\Http\Controllers\AdminController::class, 'statistics'])->name('statistics');
+    // Route::get('/admin/statistics', [AdminController::class, 'statistics'])->name('admin.statistics');
 
     // Beállítások
     Route::get('/settings', [App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
     Route::post('/settings', [App\Http\Controllers\AdminController::class, 'updateSettings'])->name('settings.update');
+
+
+
+
+    // Intézmények kezelése
+    Route::get('/institutions', [App\Http\Controllers\Admin\InstitutionsController::class, 'index'])->name('institutions.index');
+    Route::get('/institutions/upload', [App\Http\Controllers\Admin\InstitutionsController::class, 'uploadForm'])->name('institutions.upload');
+    Route::post('/institutions/import', [App\Http\Controllers\Admin\InstitutionsController::class, 'import'])->name('institutions.import');
+    Route::get('/institutions/{id}/edit', [App\Http\Controllers\Admin\InstitutionsController::class, 'edit'])->name('institutions.edit');
+    Route::put('/institutions/{id}', [App\Http\Controllers\Admin\InstitutionsController::class, 'update'])->name('institutions.update');
+    Route::delete('/institutions/{id}', [App\Http\Controllers\Admin\InstitutionsController::class, 'destroy'])->name('institutions.destroy');
+    Route::post('/institutions/generate-tracking', [App\Http\Controllers\Admin\InstitutionsController::class, 'generateTrackingCodes'])->name('institutions.generate-tracking');
+
+    // Email küldés útvonalak
+    Route::get('/emails', [App\Http\Controllers\Admin\EmailController::class, 'index'])->name('emails.index');
+    Route::post('/emails/send-to-one/{id}', [App\Http\Controllers\Admin\EmailController::class, 'sendToOne'])->name('emails.send-to-one');
+    Route::post('/emails/send-to-not-completed', [App\Http\Controllers\Admin\EmailController::class, 'sendToNotCompleted'])->name('emails.send-to-not-completed');
+
+
 });

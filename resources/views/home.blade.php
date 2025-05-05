@@ -172,7 +172,7 @@
             </div>
             <h3 class="text-2xl font-bold text-center mb-4 text-gray-800">Kérdőív kitöltési határidő</h3>
             <p class="text-xl text-center mb-6 text-gray-600">
-                <span class="font-bold text-secondary-color">2025. április 30. éjfél</span>
+                <span class="font-bold text-secondary-color">2025. Május 30. (péntek) éjfél</span>
             </p>
             <p class="text-gray-600 text-center">
                 Kérjük, hogy a fenti határidőig töltse ki a kérdőívünket, hogy az Ön válaszai is bekerülhessenek az elemzésünkbe.

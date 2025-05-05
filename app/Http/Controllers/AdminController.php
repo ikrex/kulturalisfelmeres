@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Survey;
 use App\Models\TemporarySurvey;
+use App\Models\Response;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+
 
 class AdminController extends Controller
 {
@@ -162,7 +167,7 @@ class AdminController extends Controller
     /**
      * Export - Kérdőívek exportálása CSV formátumban
      */
-    public function exportSurveys()
+    public function exportSurveysCSV()
     {
         if (!Auth::user()->user_group === 'admin') {
             abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
@@ -227,6 +232,280 @@ class AdminController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+
+
+/**
+ * Export - Kérdőívek exportálása Excel formátumban összesítő adatokkal
+ */
+public function exportSurveys()
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
+    }
+
+    $surveys = Survey::all();
+    $fileName = 'surveys_export_' . date('Y-m-d') . '.xlsx';
+
+    $spreadsheet = new Spreadsheet();
+
+    // 1. Első munkalap - Nyers adatok
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Kitöltések');
+
+    // Fejlécek
+    $sheet->setCellValue('A1', 'ID');
+    $sheet->setCellValue('B1', 'Intézmény neve');
+    $sheet->setCellValue('C1', 'Rendezvény szoftver');
+    $sheet->setCellValue('D1', 'Statisztikai problémák');
+    $sheet->setCellValue('E1', 'Kommunikációs problémák');
+    $sheet->setCellValue('F1', 'Rendezvény átláthatóság');
+    $sheet->setCellValue('G1', 'Segítséget szeretne');
+    $sheet->setCellValue('H1', 'Kapcsolattartó');
+    $sheet->setCellValue('I1', 'IP cím');
+    $sheet->setCellValue('J1', 'Létrehozva');
+    $sheet->setCellValue('K1', 'Információáramlás problémák');
+    $sheet->setCellValue('L1', 'Információáramlás egyéb szöveg');
+    $sheet->setCellValue('M1', 'Rendezvény követés előnyei');
+    $sheet->setCellValue('N1', 'Rendezvény követés egyéb szöveg');
+    $sheet->setCellValue('O1', 'Statisztikai előnyök');
+    $sheet->setCellValue('P1', 'Statisztikai előnyök egyéb szöveg');
+
+    // Adatok
+    $row = 2;
+    foreach ($surveys as $survey) {
+        $sheet->setCellValue('A' . $row, $survey->id);
+        $sheet->setCellValue('B' . $row, $survey->institution_name);
+        $sheet->setCellValue('C' . $row, $survey->event_software);
+        $sheet->setCellValue('D' . $row, $survey->statistics_issues);
+        $sheet->setCellValue('E' . $row, $survey->communication_issues);
+        $sheet->setCellValue('F' . $row, $survey->event_transparency);
+        $sheet->setCellValue('G' . $row, $survey->want_help);
+        $sheet->setCellValue('H' . $row, $survey->contact);
+        $sheet->setCellValue('I' . $row, $survey->ip_address);
+        $sheet->setCellValue('J' . $row, $survey->created_at);
+        $sheet->setCellValue('K' . $row, $survey->info_flow_issues);
+        $sheet->setCellValue('L' . $row, $survey->info_flow_issues_other_text);
+        $sheet->setCellValue('M' . $row, $survey->event_tracking_benefits);
+        $sheet->setCellValue('N' . $row, $survey->event_tracking_benefits_other_text);
+        $sheet->setCellValue('O' . $row, $survey->stats_benefits);
+        $sheet->setCellValue('P' . $row, $survey->stats_benefits_other_text);
+
+        $row++;
+    }
+
+    // Táblázat formázása - Oszlopok automatikus méretezése
+    foreach(range('A','P') as $columnID) {
+        $sheet->getColumnDimension($columnID)->setAutoSize(true);
+    }
+
+    // Fejléc formázása - félkövér betűtípus
+    $sheet->getStyle('A1:P1')->getFont()->setBold(true);
+
+    // 2. Második munkalap - Összesítés
+    $summarySheet = $spreadsheet->createSheet();
+    $summarySheet->setTitle('Összesítés');
+
+    // Cím
+    $summarySheet->setCellValue('A1', 'ÖSSZESÍTŐ STATISZTIKÁK');
+    $summarySheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+    $summarySheet->mergeCells('A1:C1');
+    $summarySheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+    // Alapstatisztikák
+    $summarySheet->setCellValue('A3', 'Kitöltő intézmények száma:');
+    $summarySheet->setCellValue('B3', $surveys->count());
+    $summarySheet->getStyle('A3:B3')->getFont()->setBold(true);
+
+    // Segítséget szeretne - igen/nem statisztika
+    $wantHelpCount = $surveys->where('want_help', 'Igen')->count();
+    $summarySheet->setCellValue('A4', 'Segítséget szeretne:');
+    $summarySheet->setCellValue('B4', $wantHelpCount . ' intézmény');
+    $summarySheet->setCellValue('C4', '(' . round(($wantHelpCount / $surveys->count()) * 100, 1) . '%)');
+
+    // Rendezvény szoftverek összesítése
+    $summarySheet->setCellValue('A6', 'HASZNÁLT RENDEZVÉNYKEZELŐ SZOFTVEREK:');
+    $summarySheet->getStyle('A6')->getFont()->setBold(true);
+    $summarySheet->mergeCells('A6:C6');
+
+    // Szoftverek - teljes érték alapján (nem vesszővel elválasztva)
+    $softwareStats = [];
+    foreach ($surveys as $survey) {
+        $software = trim($survey->event_software);
+        if (!empty($software) && $software != 'N/A' && $software != '-') {
+            if (!isset($softwareStats[$software])) {
+                $softwareStats[$software] = 0;
+            }
+            $softwareStats[$software]++;
+        }
+    }
+
+    // ABC sorrendbe rendezés
+    ksort($softwareStats);
+
+    $row = 7;
+    foreach ($softwareStats as $software => $count) {
+        $summarySheet->setCellValue('A' . $row, $software);
+        $summarySheet->setCellValue('B' . $row, $count . ' intézmény');
+        $summarySheet->setCellValue('C' . $row, '(' . round(($count / $surveys->count()) * 100, 1) . '%)');
+        $row++;
+    }
+
+    // Statisztikai problémák összesítése - teljes értékekkel, nem feldarabolva
+    $row += 2;
+    $summarySheet->setCellValue('A' . $row, 'STATISZTIKAI PROBLÉMÁK:');
+    $summarySheet->getStyle('A' . $row)->getFont()->setBold(true);
+    $summarySheet->mergeCells('A' . $row . ':C' . $row);
+    $row++;
+
+    $statIssuesStats = [];
+    foreach ($surveys as $survey) {
+        $issue = trim($survey->statistics_issues);
+        if (!empty($issue) && $issue != 'N/A' && $issue != '-') {
+            if (!isset($statIssuesStats[$issue])) {
+                $statIssuesStats[$issue] = 0;
+            }
+            $statIssuesStats[$issue]++;
+        }
+    }
+
+    ksort($statIssuesStats);
+
+    foreach ($statIssuesStats as $issue => $count) {
+        $summarySheet->setCellValue('A' . $row, $issue);
+        $summarySheet->setCellValue('B' . $row, $count . ' intézmény');
+        $summarySheet->setCellValue('C' . $row, '(' . round(($count / $surveys->count()) * 100, 1) . '%)');
+        $row++;
+    }
+
+    // Kommunikációs problémák összesítése - teljes értékekkel
+    $row += 2;
+    $summarySheet->setCellValue('A' . $row, 'KOMMUNIKÁCIÓS PROBLÉMÁK:');
+    $summarySheet->getStyle('A' . $row)->getFont()->setBold(true);
+    $summarySheet->mergeCells('A' . $row . ':C' . $row);
+    $row++;
+
+    $commIssuesStats = [];
+    foreach ($surveys as $survey) {
+        $issue = trim($survey->communication_issues);
+        if (!empty($issue) && $issue != 'N/A' && $issue != '-') {
+            if (!isset($commIssuesStats[$issue])) {
+                $commIssuesStats[$issue] = 0;
+            }
+            $commIssuesStats[$issue]++;
+        }
+    }
+
+    ksort($commIssuesStats);
+
+    foreach ($commIssuesStats as $issue => $count) {
+        $summarySheet->setCellValue('A' . $row, $issue);
+        $summarySheet->setCellValue('B' . $row, $count . ' intézmény');
+        $summarySheet->setCellValue('C' . $row, '(' . round(($count / $surveys->count()) * 100, 1) . '%)');
+        $row++;
+    }
+
+    // Információáramlás problémák összesítése - teljes értékekkel
+    $row += 2;
+    $summarySheet->setCellValue('A' . $row, 'INFORMÁCIÓÁRAMLÁS PROBLÉMÁK:');
+    $summarySheet->getStyle('A' . $row)->getFont()->setBold(true);
+    $summarySheet->mergeCells('A' . $row . ':C' . $row);
+    $row++;
+
+    $infoFlowStats = [];
+    foreach ($surveys as $survey) {
+        $issue = trim($survey->info_flow_issues);
+        if (!empty($issue) && $issue != 'N/A' && $issue != '-') {
+            if (!isset($infoFlowStats[$issue])) {
+                $infoFlowStats[$issue] = 0;
+            }
+            $infoFlowStats[$issue]++;
+        }
+    }
+
+    ksort($infoFlowStats);
+
+    foreach ($infoFlowStats as $issue => $count) {
+        $summarySheet->setCellValue('A' . $row, $issue);
+        $summarySheet->setCellValue('B' . $row, $count . ' intézmény');
+        $summarySheet->setCellValue('C' . $row, '(' . round(($count / $surveys->count()) * 100, 1) . '%)');
+        $row++;
+    }
+
+    // Rendezvény követés előnyei - teljes értékekkel
+    $row += 2;
+    $summarySheet->setCellValue('A' . $row, 'RENDEZVÉNY KÖVETÉS ELŐNYEI:');
+    $summarySheet->getStyle('A' . $row)->getFont()->setBold(true);
+    $summarySheet->mergeCells('A' . $row . ':C' . $row);
+    $row++;
+
+    $trackingBenefitsStats = [];
+    foreach ($surveys as $survey) {
+        $benefit = trim($survey->event_tracking_benefits);
+        if (!empty($benefit) && $benefit != 'N/A' && $benefit != '-') {
+            if (!isset($trackingBenefitsStats[$benefit])) {
+                $trackingBenefitsStats[$benefit] = 0;
+            }
+            $trackingBenefitsStats[$benefit]++;
+        }
+    }
+
+    ksort($trackingBenefitsStats);
+
+    foreach ($trackingBenefitsStats as $benefit => $count) {
+        $summarySheet->setCellValue('A' . $row, $benefit);
+        $summarySheet->setCellValue('B' . $row, $count . ' intézmény');
+        $summarySheet->setCellValue('C' . $row, '(' . round(($count / $surveys->count()) * 100, 1) . '%)');
+        $row++;
+    }
+
+    // Statisztikai előnyök - teljes értékekkel
+    $row += 2;
+    $summarySheet->setCellValue('A' . $row, 'STATISZTIKAI ELŐNYÖK:');
+    $summarySheet->getStyle('A' . $row)->getFont()->setBold(true);
+    $summarySheet->mergeCells('A' . $row . ':C' . $row);
+    $row++;
+
+    $statBenefitsStats = [];
+    foreach ($surveys as $survey) {
+        $benefit = trim($survey->stats_benefits);
+        if (!empty($benefit) && $benefit != 'N/A' && $benefit != '-') {
+            if (!isset($statBenefitsStats[$benefit])) {
+                $statBenefitsStats[$benefit] = 0;
+            }
+            $statBenefitsStats[$benefit]++;
+        }
+    }
+
+    ksort($statBenefitsStats);
+
+    foreach ($statBenefitsStats as $benefit => $count) {
+        $summarySheet->setCellValue('A' . $row, $benefit);
+        $summarySheet->setCellValue('B' . $row, $count . ' intézmény');
+        $summarySheet->setCellValue('C' . $row, '(' . round(($count / $surveys->count()) * 100, 1) . '%)');
+        $row++;
+    }
+
+    // Összesítő munkalap formázása
+    $summarySheet->getColumnDimension('A')->setAutoSize(true);
+    $summarySheet->getColumnDimension('B')->setAutoSize(true);
+    $summarySheet->getColumnDimension('C')->setAutoSize(true);
+
+    // Aktív lap beállítása az Összesítő-re
+    $spreadsheet->setActiveSheetIndex(1);
+
+    // Excel fájl létrehozása
+    $writer = new Xlsx($spreadsheet);
+    $tempFile = tempnam(sys_get_temp_dir(), 'survey_export_');
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $fileName, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ])->deleteFileAfterSend(true);
+}
+
+
+
 
     /**
      * Statistics - Kérdőív statisztikák
@@ -357,4 +636,60 @@ class AdminController extends Controller
     {
         return Auth::user() && Auth::user()->user_group === 'admin';
     }
+
+
+
+
+
+/**
+ * Export surveys to Excel file
+ *
+ * @param \Illuminate\Database\Eloquent\Collection $surveys
+ * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+ */
+private function exportSurveysFaszsag($surveys)
+{
+    $fileName = 'surveys_' . date('Y-m-d') . '.xlsx';
+
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+
+    // Fejlécek
+    $sheet->setCellValue('A1', 'ID');
+    $sheet->setCellValue('B1', 'Kérdőív neve');
+    $sheet->setCellValue('C1', 'Létrehozó');
+    $sheet->setCellValue('D1', 'Létrehozva');
+    $sheet->setCellValue('E1', 'Kitöltések');
+    $sheet->setCellValue('F1', 'Státusz');
+
+    // Adatok
+    $row = 2;
+    foreach ($surveys as $survey) {
+        $responsesCount = Response::where('survey_id', $survey->id)->count();
+
+        $sheet->setCellValue('A' . $row, $survey->id);
+        $sheet->setCellValue('B' . $row, $survey->name);
+        $sheet->setCellValue('C' . $row, $survey->user->name ?? 'N/A');
+        $sheet->setCellValue('D' . $row, $survey->created_at->format('Y-m-d H:i'));
+        $sheet->setCellValue('E' . $row, $responsesCount);
+        $sheet->setCellValue('F' . $row, $survey->is_active ? 'Aktív' : 'Inaktív');
+
+        $row++;
+    }
+
+    // Táblázat formázása
+    foreach(range('A','F') as $columnID) {
+        $sheet->getColumnDimension($columnID)->setAutoSize(true);
+    }
+
+    // Excel fájl létrehozása
+    $writer = new Xlsx($spreadsheet);
+    $tempFile = tempnam(sys_get_temp_dir(), 'survey_export_');
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $fileName, [
+        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ])->deleteFileAfterSend(true);
+}
+
 }

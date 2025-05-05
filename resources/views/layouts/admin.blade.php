@@ -104,6 +104,25 @@
                             Statisztikák
                         </a>
                     </li>
+
+                    <hr class="bg-white border-1 my-3 opacity-25">
+                    <div class="d-flex align-items-center text-decoration-none text-white">Kulturális intézmények</div>
+                    <a class="sidebar-link {{ Request::routeIs('admin.institutions.*') ? 'active' : '' }}" href="{{ route('admin.institutions.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-university"></i></div>
+                        Intézmények
+                    </a>
+                    <a class="sidebar-link {{ Request::routeIs('admin.institutions.upload') ? 'active' : '' }}" href="{{ route('admin.institutions.upload') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-upload"></i></div>
+                        Excel importálása
+                    </a>
+
+                    <div class="sb-sidenav-menu-heading">Email kezelés</div>
+                    <a class="sidebar-link {{ Request::routeIs('admin.emails.*') ? 'active' : '' }}" href="{{ route('admin.emails.index') }}">
+                        <div class="sb-nav-link-icon"><i class="fas fa-envelope"></i></div>
+                        Email küldés
+                    </a>
+
+
                     <li class="nav-item">
                         <a href="{{ route('admin.settings') }}" class="sidebar-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
                             <i class="fas fa-fw fa-cog me-2"></i>
