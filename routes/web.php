@@ -8,6 +8,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
 
 // Főoldal
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -16,7 +18,23 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/rolunk', [HomeController::class, 'about'])->name('about');
 
 // Kérdőív útvonalak
-Route::get('/kerdoiv', [SurveyController::class, 'showForm'])->name('survey.form');
+// Route::get('/kerdoiv', [SurveyController::class, 'showForm'])->name('survey.form');
+
+// Kérdőív útvonalak - időzítővel
+Route::get('/kerdoiv', function () {
+    // A határidő: 2025. május 31. 00:00:00
+    $deadline = Carbon::createFromFormat('Y-m-d H:i:s', '2025-05-31 00:00:00');
+    $now = Carbon::now();
+
+    if ($now->greaterThanOrEqualTo($deadline)) {
+        // Határidő után - lezárt oldal megjelenítése
+        return view('survey.closed');
+    } else {
+        // Határidő előtt - normál kérdőív megjelenítése
+        return app(SurveyController::class)->showForm(request());
+    }
+})->name('survey.form');
+
 Route::post('/kerdoiv/bekuldese', [SurveyController::class, 'submitForm'])->name('survey.submit');
 Route::get('/kerdoiv/koszonjuk', [SurveyController::class, 'showThanks'])->name('survey.thanks');
 // Route::post('/kerdoiv/ideiglenes-mentes', [TemporarySurveyController::class, 'saveTemporary'])->name('survey.temporary.save');
@@ -78,8 +96,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{id}/remove-admin', [App\Http\Controllers\AdminController::class, 'removeAdmin'])->name('users.remove-admin');
 
     // Statisztikák
+    // Route::get('/statistics', [App\Http\Controllers\AdminController::class, 'statistics'])->name('statistics');
     Route::get('/statistics', [App\Http\Controllers\AdminController::class, 'statistics'])->name('statistics');
-    // Route::get('/admin/statistics', [AdminController::class, 'statistics'])->name('admin.statistics');
 
     // Beállítások
     Route::get('/settings', [App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
@@ -102,5 +120,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/emails/send-to-one/{id}', [App\Http\Controllers\Admin\EmailController::class, 'sendToOne'])->name('emails.send-to-one');
     Route::post('/emails/send-to-not-completed', [App\Http\Controllers\Admin\EmailController::class, 'sendToNotCompleted'])->name('emails.send-to-not-completed');
 
+    Route::post('/admin/institutions/{id}/email-preferences', [App\Http\Controllers\Admin\EmailController::class, 'updateEmailPreferences'])
+    ->name('admin.institutions.email-preferences');
+
+
+
+    // Eredménylevelek aloldal
+    Route::get('/result-letters', [AdminController::class, 'resultLetters'])->name('result-letters.index');
+
+    // Egyedi eredménylevél küldés
+    Route::post('/result-letters/send/{id}', [AdminController::class, 'sendResultLetter'])->name('result-letters.send');
+
+    // Összes eredménylevél küldés
+    Route::post('/result-letters/send-all', [AdminController::class, 'sendAllResultLetters'])->name('result-letters.send-all');
+
+    // Eredménylevél előnézet
+    Route::get('/result-letters/preview/{id}', [AdminController::class, 'previewResultLetter'])->name('result-letters.preview');
 
 });

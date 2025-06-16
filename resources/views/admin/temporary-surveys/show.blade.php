@@ -47,10 +47,11 @@
                                                 Kitöltés adatai</div>
                                             <div class="mb-0">
                                                 <p><strong>Azonosító:</strong> #{{ $survey->id }}</p>
+                                                <p><strong>UUID:</strong> {{ $survey->uuid }}</p>
                                                 <p><strong>Elkezdve:</strong> {{ $survey->created_at->format('Y.m.d. H:i') }}</p>
                                                 <p><strong>Utolsó aktivitás:</strong> {{ $survey->updated_at->format('Y.m.d. H:i') }}</p>
                                                 <p><strong>IP cím:</strong> {{ $survey->ip_address }}</p>
-                                                <p><strong>Státusz:</strong> <span class="badge badge-warning">Folyamatban</span></p>
+                                                <p><strong>Státusz:</strong> <span class="badge bg-warning">Folyamatban</span></p>
                                             </div>
                                         </div>
                                         <div class="col-auto">
@@ -86,6 +87,7 @@
                                             <th>Rendezvény átláthatóság</th>
                                             <td>{{ $survey->event_transparency ?? 'Még nincs megadva' }}</td>
                                         </tr>
+                                        @if(isset($survey->info_flow_issues))
                                         <tr>
                                             <th>Információáramlás problémák</th>
                                             <td>
@@ -95,6 +97,7 @@
                                                 @endif
                                             </td>
                                         </tr>
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>
@@ -103,6 +106,7 @@
                             <div class="table-responsive">
                                 <table class="table table-bordered">
                                     <tbody>
+                                        @if(isset($survey->event_tracking_benefits))
                                         <tr>
                                             <th width="30%">Rendezvény követés előnyei</th>
                                             <td>
@@ -112,6 +116,8 @@
                                                 @endif
                                             </td>
                                         </tr>
+                                        @endif
+                                        @if(isset($survey->stats_benefits))
                                         <tr>
                                             <th>Statisztikai előnyök</th>
                                             <td>
@@ -121,6 +127,7 @@
                                                 @endif
                                             </td>
                                         </tr>
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>

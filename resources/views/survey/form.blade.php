@@ -7,8 +7,9 @@
  * Kérdőív ideiglenes mentésének JavaScript kódja
  * Ez a kód a Laravel 12-vel kompatibilis CSRF kezelést is tartalmazza
  */
-document.addEventListener('DOMContentLoaded', function() {
+ document.addEventListener('DOMContentLoaded', function() {
     let isFormSubmitted = false;
+    const form = document.getElementById('survey-form');
     form.addEventListener('submit', function() {
         isFormSubmitted = true;
         console.log('Form beküldve, ideiglenes mentés letiltva');
@@ -23,41 +24,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // CSRF token lekérése - Laravel 12-ben is ugyanúgy működik
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    // "Egyéb" opciók kezelése
-    const otherOptions = document.querySelectorAll('input[value="other"]');
-    otherOptions.forEach(option => {
-        const name = option.getAttribute('name');
+    // "Egyéb" opciók kezelése - JAVÍTOTT RÉSZ
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+
+    // Egyéb opciók kezdeti állapotának beállítása minden csoportban
+    document.querySelectorAll('input[value="other"]').forEach(otherOption => {
+        const name = otherOption.getAttribute('name');
         const textareaId = name + '_other_text';
         const textarea = document.getElementById(textareaId);
 
-        // Kezdeti állapot beállítása
         if (textarea) {
-            textarea.style.display = option.checked ? 'block' : 'none';
+            textarea.style.display = otherOption.checked ? 'block' : 'none';
         }
-
-        // Változás figyelése
-        option.addEventListener('change', function() {
-            if (textarea) {
-                textarea.style.display = this.checked ? 'block' : 'none';
-            }
-        });
     });
 
-    // Az összes radiogroup ellenőrzése
-    const radioGroups = document.querySelectorAll('.radio-group');
-    radioGroups.forEach(group => {
-        const options = group.querySelectorAll('input[type="radio"]');
-        options.forEach(option => {
-            option.addEventListener('change', function() {
-                // Ha nem "other" opciót választott, elrejtjük a szövegmezőt
-                const name = this.getAttribute('name');
-                const textareaId = name + '_other_text';
-                const textarea = document.getElementById(textareaId);
+    // Minden radio gomb változásának figyelése
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const name = this.getAttribute('name');
+            const textareaId = name + '_other_text';
+            const textarea = document.getElementById(textareaId);
 
-                if (textarea && this.value !== 'other') {
-                    textarea.style.display = 'none';
-                }
-            });
+            // Ha ez egy "other" opció és be van jelölve, megjelenítjük a textarea-t
+            if (this.value === 'other' && this.checked && textarea) {
+                textarea.style.display = 'block';
+            }
+            // Ha nem "other" opció, de ugyanabban a csoportban van, elrejtjük a textarea-t
+            else if (this.checked && textarea) {
+                textarea.style.display = 'none';
+            }
         });
     });
 
@@ -69,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Az adatokat csak akkor küldjük el, ha legalább egy mező ki van töltve
-        const form = document.getElementById('survey-form');
         const formData = new FormData(form);
 
         // UUID hozzáadása, ha van
@@ -215,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div>
             <label for="event_software" class="block font-semibold text-gray-700 mb-1">Használt rendezvényszervező szoftver(ek)<br>
-                <small>Pl KalDo rendszer, google naptár, ecel tábla, megosztott word dokumentum</small><br>
+                <small>Pl KalDo rendszer, google naptár, excel tábla, megosztott word dokumentum</small><br>
                 ha nincs, akkor hogyan rögzítik a rendezvényeket (pl papír alapon)
             </label>
             <input type="text" name="event_software" id="event_software"
@@ -250,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div>
                     <input type="radio" id="info_flow_other" name="info_flow_issues" value="other"
                         {{ ($temporarySurvey->info_flow_issues ?? old('info_flow_issues')) == 'other' ? 'checked' : '' }}>
-                    <label for="info_flow_other" class="ml-2">Egyéb</label>
+                    <label for="info_flow_other" class="ml-2">Egyéb (Fejtse is ki)</label>
                 </div>
                 <textarea id="info_flow_issues_other_text" name="info_flow_issues_other_text"
                     class="mt-2 w-full border border-gray-300 p-3 rounded-md focus:ring focus:ring-primary-color focus:border-primary-color transition"
@@ -281,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div>
                     <input type="radio" id="event_tracking_other" name="event_tracking_benefits" value="other"
                         {{ ($temporarySurvey->event_tracking_benefits ?? old('event_tracking_benefits')) == 'other' ? 'checked' : '' }}>
-                    <label for="event_tracking_other" class="ml-2">Egyéb</label>
+                    <label for="event_tracking_other" class="ml-2">Egyéb (Fejtse is ki)</label>
                 </div>
                 <textarea id="event_tracking_benefits_other_text" name="event_tracking_benefits_other_text"
                     class="mt-2 w-full border border-gray-300 p-3 rounded-md focus:ring focus:ring-primary-color focus:border-primary-color transition"
@@ -317,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div>
                     <input type="radio" id="stats_benefits_other" name="stats_benefits" value="other"
                         {{ ($temporarySurvey->stats_benefits ?? old('stats_benefits')) == 'other' ? 'checked' : '' }}>
-                    <label for="stats_benefits_other" class="ml-2">Egyéb</label>
+                    <label for="stats_benefits_other" class="ml-2">Egyéb (Fejtse is ki)</label>
                 </div>
                 <textarea id="stats_benefits_other_text" name="stats_benefits_other_text"
                     class="mt-2 w-full border border-gray-300 p-3 rounded-md focus:ring focus:ring-primary-color focus:border-primary-color transition"

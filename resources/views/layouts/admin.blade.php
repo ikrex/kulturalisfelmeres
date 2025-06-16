@@ -122,6 +122,13 @@
                         Email küldés
                     </a>
 
+                    <li class="nav-item">
+                        <a href="{{ route('admin.result-letters.index') }}" class="nav-link">
+                            <i class="fas fa-envelope"></i>
+                            <p>Eredménylevelek</p>
+                        </a>
+                    </li>
+
 
                     <li class="nav-item">
                         <a href="{{ route('admin.settings') }}" class="sidebar-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}">

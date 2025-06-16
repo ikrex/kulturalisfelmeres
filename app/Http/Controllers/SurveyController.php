@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\CulturalInstitution; // Importáljuk a modellt
-
+use Illuminate\Support\Facades\Schema;
 
 use App\Mail\SurveyCompletedMail;
 
@@ -56,6 +56,7 @@ public function showForm(Request $request)
                     ->with('info', 'Ezzel az email címmel már kitöltötték a kérdőívet. Köszönjük részvételét!');
             }
         }
+
     }
 
     // Ha van uuid, megpróbáljuk betölteni az ideiglenes adatokat
@@ -67,7 +68,7 @@ public function showForm(Request $request)
         // Ha van ideiglenes kérdőív és követőkód is, ellenőrizzük, hogy nem töltötte-e már ki
         if ($temporarySurvey && $trackingCode) {
             // Ellenőrizzük, hogy a táblában van-e tracking_code mező
-            $tempSurveyColumns = \Schema::getColumnListing('temporary_surveys');
+            $tempSurveyColumns = Schema::getColumnListing('temporary_surveys');
 
             // Ha van tracking_code mező és az ideiglenes kérdőívhez már rögzítve van, frissítjük
             if (in_array('tracking_code', $tempSurveyColumns) && !$temporarySurvey->tracking_code) {
@@ -76,6 +77,19 @@ public function showForm(Request $request)
             }
         }
     }
+    if ($trackingCode) {
+        // Ha nincs uuid, de van követőkód, nézzük meg, hogy van-e már kitöltés ezzel a követőkóddal
+        $temporarySurvey = TemporarySurvey::where('tracking_code', $trackingCode)
+            ->where('is_completed', false)
+            ->latest()
+            ->first();
+
+        if ($temporarySurvey) {
+            $uuid = $temporarySurvey->uuid;
+        }
+    }
+
+
 
     return view('survey.form', compact('temporarySurvey', 'uuid', 'trackingCode', 'institution'));
 }
@@ -177,7 +191,7 @@ if ($uuid) {
                 ]);
 
                 // Töröljük az ideiglenes kérdőíveket ezzel a követőkóddal
-                $tempSurveyColumns = \Schema::getColumnListing('temporary_surveys');
+                $tempSurveyColumns = Schema::getColumnListing('temporary_surveys');
                 if (in_array('tracking_code', $tempSurveyColumns)) {
                     TemporarySurvey::where('tracking_code', $request->input('tracking_code'))->delete();
                     Log::info('Ideiglenes kérdőívek törölve a követőkód alapján', [

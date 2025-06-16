@@ -27,6 +27,11 @@ class CulturalInstitution extends Model
         'tracking_code',
         'survey_completed',
         'email_opens',
+        'email_sent',
+        'last_email_sent_at',
+        'can_receive_emails',
+        'admin_notes',
+        'email_opt_out_reason',
     ];
 
     /**
@@ -37,6 +42,9 @@ class CulturalInstitution extends Model
     protected $casts = [
         'survey_completed' => 'boolean',
         'email_opens' => 'array',
+        'email_sent' => 'boolean',
+        'last_email_sent_at' => 'datetime',
+        'can_receive_emails' => 'boolean',
     ];
 
     /**

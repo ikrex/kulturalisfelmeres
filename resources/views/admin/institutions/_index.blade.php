@@ -1,8 +1,6 @@
-{{-- resources/views/admin/institutions/index.blade.php --}}
 @extends('layouts.admin')
 
 @section('content')
-
 <div class="container-fluid px-4">
     <h1 class="mt-4">Kulturális intézmények</h1>
     <ol class="breadcrumb mb-4">
@@ -71,14 +69,6 @@
                 </form>
             </div>
 
-            <!-- Lapozó a táblázat FELETT, pontosan úgy, mint az /admin/emails oldalon -->
-            <div class="d-flex justify-content-between mb-3">
-                <div>Showing {{ $institutions->firstItem() }} to {{ $institutions->lastItem() }} of {{ $institutions->total() }} results</div>
-                <div>
-                    {{ $institutions->appends(request()->except('page'))->links() }}
-                </div>
-            </div>
-
             <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
@@ -138,6 +128,7 @@
                             @endif
                         </td>
 
+
                         <td>
                             @if($institution->survey_completed)
                                 <span class="badge bg-success">Igen</span>
@@ -166,32 +157,10 @@
                 </tbody>
             </table>
 
-            <!-- Lapozó a táblázat ALATT, pontosan úgy, mint az /admin/emails oldalon -->
-            <div class="d-flex justify-content-between mt-3">
-                <div>Showing {{ $institutions->firstItem() }} to {{ $institutions->lastItem() }} of {{ $institutions->total() }} results</div>
-                <div>
-                    {{ $institutions->appends(request()->except('page'))->links() }}
-                </div>
+            <div class="d-flex justify-content-center">
+                {{ $institutions->appends(request()->except('page'))->links() }}
             </div>
         </div>
     </div>
 </div>
-@endsection
-
-@section('styles')
-<style>
-/* Ez a stílus a lapozó méretét korrigálja - adjuk hozzá az oldalhoz */
-.pagination .page-link {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-
-.pagination svg {
-    width: 12px;
-    height: 12px;
-}
-
-
-
-</style>
 @endsection

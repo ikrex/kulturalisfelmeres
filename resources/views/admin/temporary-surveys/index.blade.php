@@ -11,14 +11,27 @@
                     <h2 class="m-0 font-weight-bold">Folyamatban lévő kitöltések</h2>
                 </div>
                 <div class="card-body">
+                    @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                    @endif
+
+                    @if(session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                    @endif
+
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover" id="tempSurveysTable" width="100%" cellspacing="0">
                             <thead>
                                 <tr>
                                     <th>ID</th>
+                                    <th>UUID</th>
                                     <th>Intézmény neve</th>
                                     <th>Rendezvény szoftver</th>
-                                    <th>Kapcsolat</th>
+                                    <th>IP cím</th>
                                     <th>Elkezdve</th>
                                     <th>Utolsó aktivitás</th>
                                     <th>Műveletek</th>
@@ -28,9 +41,10 @@
                                 @forelse($surveys as $survey)
                                 <tr>
                                     <td>{{ $survey->id }}</td>
+                                    <td><small>{{ $survey->uuid }}</small></td>
                                     <td>{{ $survey->institution_name ?? 'Még nincs megadva' }}</td>
                                     <td>{{ $survey->event_software ?? 'Még nincs megadva' }}</td>
-                                    <td>{{ $survey->contact ?? 'Még nincs megadva' }}</td>
+                                    <td>{{ $survey->ip_address }}</td>
                                     <td>{{ $survey->created_at->format('Y.m.d. H:i') }}</td>
                                     <td>{{ $survey->updated_at->format('Y.m.d. H:i') }}</td>
                                     <td>
@@ -48,7 +62,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">Nincs folyamatban lévő kitöltés.</td>
+                                    <td colspan="8" class="text-center">Nincs folyamatban lévő kitöltés.</td>
                                 </tr>
                                 @endforelse
                             </tbody>

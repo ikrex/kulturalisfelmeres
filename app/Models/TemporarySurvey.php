@@ -16,6 +16,7 @@ class TemporarySurvey extends Model
      */
     protected $fillable = [
         'uuid',
+        'tracking_code',
         'institution_name',
         'event_software',
         'statistics_issues',

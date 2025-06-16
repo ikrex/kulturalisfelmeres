@@ -48,6 +48,13 @@ class EmailController extends Controller
     {
         $institution = CulturalInstitution::findOrFail($id);
 
+
+        // Ellenőrizzük, hogy az intézmény kaphat-e emailt
+        if (!$institution->can_receive_emails) {
+            return redirect()->route('admin.emails.index')
+                ->with('error', "Az email nem lett elküldve! {$institution->name} nem fogadhat emaileket. Indok: {$institution->email_opt_out_reason}");
+        }
+
         // Ha nincs még követőkódja, akkor generálunk egyet
         if (empty($institution->tracking_code)) {
             $institution->tracking_code = CulturalInstitution::generateTrackingCode();
@@ -60,6 +67,11 @@ class EmailController extends Controller
                 $message->to($institution->email, $institution->name);
                 $message->subject('Felmérés művelődési intézmények működéséről – Ingyenes visszajelzés a kitöltőknek');
             });
+
+            // Frissítjük az email küldési státuszt
+            $institution->email_sent = true;
+            $institution->last_email_sent_at = now();
+            $institution->save();
 
             return redirect()->route('admin.emails.index')
                 ->with('success', "Sikeres email küldés a következő intézménynek: {$institution->name}");
@@ -82,9 +94,13 @@ class EmailController extends Controller
      */
     public function sendToNotCompleted(Request $request)
     {
-        $institutions = CulturalInstitution::where('survey_completed', false)->get();
+        $institutions = CulturalInstitution::where('survey_completed', false)
+            ->where('can_receive_emails', true) // Csak azoknak, akiknek küldhetünk emailt
+            ->get();
+
         $successCount = 0;
         $errorCount = 0;
+        $skippedCount = 0;
 
         foreach ($institutions as $institution) {
             // Ha nincs még követőkódja, akkor generálunk egyet
@@ -100,6 +116,11 @@ class EmailController extends Controller
                     $message->subject('Felmérés művelődési intézmények működéséről – Ingyenes visszajelzés a kitöltőknek');
                 });
 
+                // Frissítjük az email küldési státuszt
+                $institution->email_sent = true;
+                $institution->last_email_sent_at = now();
+                $institution->save();
+
                 $successCount++;
             } catch (\Exception $e) {
                 Log::error('Hiba történt az email küldése során: ' . $e->getMessage(), [
@@ -111,12 +132,46 @@ class EmailController extends Controller
             }
         }
 
-        if ($errorCount > 0) {
-            return redirect()->route('admin.emails.index')
-                ->with('warning', "Email küldés eredménye: {$successCount} sikeres, {$errorCount} sikertelen küldés.");
-        } else {
-            return redirect()->route('admin.emails.index')
-                ->with('success', "Összesen {$successCount} intézménynek sikeresen kiküldve az email.");
-        }
+        // Lekérjük a kihagyott intézmények számát
+        $optOutCount = CulturalInstitution::where('survey_completed', false)
+            ->where('can_receive_emails', false)
+            ->count();
+
+            if ($errorCount > 0 || $optOutCount > 0) {
+                $message = "Email küldés eredménye: {$successCount} sikeres, {$errorCount} sikertelen küldés.";
+                if ($optOutCount > 0) {
+                    $message .= " {$optOutCount} intézmény kihagyva (letiltott email küldés miatt).";
+                }
+                return redirect()->route('admin.emails.index')
+                    ->with('warning', $message);
+            } else {
+                return redirect()->route('admin.emails.index')
+                    ->with('success', "Összesen {$successCount} intézménynek sikeresen kiküldve az email.");
+            }
     }
+
+    /**
+     * Email preferenciák frissítése
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateEmailPreferences(Request $request, $id)
+    {
+        $institution = CulturalInstitution::findOrFail($id);
+
+        $validated = $request->validate([
+            'can_receive_emails' => 'required|boolean',
+            'email_opt_out_reason' => 'nullable|string|max:500',
+            'admin_notes' => 'nullable|string|max:1000'
+        ]);
+
+        $institution->update($validated);
+
+        return redirect()->route('admin.institutions.edit', $institution->id)
+            ->with('success', 'Az email küldési beállítások sikeresen frissítve.');
+    }
+
+
 }

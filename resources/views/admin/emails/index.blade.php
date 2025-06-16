@@ -60,7 +60,10 @@
                         <th>Email cím</th>
                         <th>Követőkód</th>
                         <th>Felmérés kitöltve</th>
+                        <th>Fogadhat emailt</th>
+                        <th>Email elküldve</th>
                         <th>Email megnyitások</th>
+                        <th>Megjegyzés</th>
                         <th>Műveletek</th>
                     </tr>
                 </thead>
@@ -84,6 +87,23 @@
                             @endif
                         </td>
                         <td>
+                            @if($institution->can_receive_emails)
+                                <span class="badge bg-success">Igen</span>
+                            @else
+                                <span class="badge bg-danger">Nem</span>
+                                @if($institution->email_opt_out_reason)
+                                <br><small class="text-muted">{{ Str::limit($institution->email_opt_out_reason, 30) }}</small>
+                                @endif
+                            @endif
+                        </td>
+                        <td>
+                            @if($institution->email_sent)
+                                <span class="badge bg-success">Igen ({{ $institution->last_email_sent_at ? $institution->last_email_sent_at->format('Y.m.d. H:i') : 'ismeretlen időpont' }})</span>
+                            @else
+                                <span class="badge bg-warning">Nem</span>
+                            @endif
+                        </td>
+                        <td>
                             @if($institution->email_opens && count($institution->email_opens) > 0)
                                 @php
                                     $opens = $institution->email_opens;
@@ -98,13 +118,24 @@
                             @endif
                         </td>
                         <td>
-                            <form method="POST" action="{{ route('admin.emails.send-to-not-completed') }}" onsubmit="return confirm('Biztosan szeretnél emailt küldeni minden olyan intézménynek, amely még nem töltötte ki a felmérést?');">
+                            @if($institution->admin_notes)
+                                <small>{{ Str::limit($institution->admin_notes, 50) }}</small>
+                            @else
+                                <small class="text-muted">-</small>
+                            @endif
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ route('admin.emails.send-to-one', $institution->id) }}" class="d-inline">
                                 @csrf
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane me-1"></i>
-                                    Email küldése az összes intézménynek, amely még nem töltötte ki a felmérést
+                                <button type="submit" class="btn btn-primary btn-sm"
+                                    {{ $institution->survey_completed || !$institution->can_receive_emails ? 'disabled' : '' }}
+                                    title="{{ !$institution->can_receive_emails ? 'Ez az intézmény nem fogadhat emailt' : '' }}">
+                                    <i class="fas fa-paper-plane"></i> Email küldése
                                 </button>
                             </form>
+                            <a href="{{ route('admin.institutions.edit', $institution->id) }}" class="btn btn-info btn-sm">
+                                <i class="fas fa-edit"></i> Szerkesztés
+                            </a>
                         </td>
                     </tr>
                     @endforeach

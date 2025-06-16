@@ -135,6 +135,25 @@
                         <label class="form-check-label" for="survey_completed">Felmérés kitöltve</label>
                     </div>
                 </div>
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="can_receive_emails" name="can_receive_emails" value="1" {{ old('can_receive_emails', $institution->can_receive_emails) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="can_receive_emails">Fogadhat emaileket</label>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="email_opt_out_reason_container" {{ old('can_receive_emails', $institution->can_receive_emails) ? 'style="display:none;"' : '' }}>
+                    <label for="email_opt_out_reason" class="form-label">Email tiltás indoka</label>
+                    <textarea class="form-control" id="email_opt_out_reason" name="email_opt_out_reason" rows="2">{{ old('email_opt_out_reason', $institution->email_opt_out_reason) }}</textarea>
+                    <div class="form-text">Írd le, hogy miért nem fogadhat emaileket az intézmény.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="admin_notes" class="form-label">Admin megjegyzések</label>
+                    <textarea class="form-control" id="admin_notes" name="admin_notes" rows="3">{{ old('admin_notes', $institution->admin_notes) }}</textarea>
+                    <div class="form-text">Belső megjegyzések az intézménnyel kapcsolatban.</div>
+                </div>
+
 
                 @if($institution->email_opens && count($institution->email_opens) > 0)
                 <div class="card mb-3">
@@ -160,4 +179,21 @@
         </div>
     </div>
 </div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var canReceiveEmailsCheckbox = document.getElementById('can_receive_emails');
+        var optOutReasonContainer = document.getElementById('email_opt_out_reason_container');
+
+        // Kezdeti állapot beállítása
+        optOutReasonContainer.style.display = canReceiveEmailsCheckbox.checked ? 'none' : 'block';
+
+        // Eseménykezelő hozzáadása
+        canReceiveEmailsCheckbox.addEventListener('change', function() {
+            optOutReasonContainer.style.display = this.checked ? 'none' : 'block';
+        });
+    });
+    </script>
+
 @endsection

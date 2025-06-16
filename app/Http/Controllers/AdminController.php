@@ -7,12 +7,15 @@ use App\Models\Survey;
 use App\Models\TemporarySurvey;
 use App\Models\Response;
 use App\Models\User;
+use App\Models\CulturalInstitution;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-
+use Illuminate\Support\Facades\Mail;
 
 
 class AdminController extends Controller
@@ -110,31 +113,33 @@ class AdminController extends Controller
      * Temporary Surveys - Folyamatban lévő kitöltések listája
      */
     public function temporarySurveys()
-    {
-        if (!Auth::user()->user_group === 'admin') {
-            abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
-        }
-
-        $surveys = TemporarySurvey::where('is_completed', false)
-            ->latest()
-            ->paginate(15);
-
-        return view('admin.temporary_surveys.index', compact('surveys'));
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
     }
+
+    $surveys = TemporarySurvey::where('is_completed', false)
+        ->latest()
+        ->paginate(15);
+
+    return view('admin.temporary-surveys.index', compact('surveys'));
+}
 
     /**
      * Temporary Survey - Egy folyamatban lévő kitöltés részletes nézete
      */
     public function showTemporarySurvey($id)
-    {
-        if (!Auth::user()->user_group === 'admin') {
-            abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
-        }
-
-        $survey = TemporarySurvey::findOrFail($id);
-
-        return view('admin.temporary_surveys.show', compact('survey'));
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
     }
+
+    $survey = TemporarySurvey::findOrFail($id);
+
+    return view('admin.temporary-surveys.show', compact('survey'));
+}
+
+
 
     /**
      * Users - Felhasználók listája
@@ -511,20 +516,114 @@ public function exportSurveys()
      * Statistics - Kérdőív statisztikák
      */
     public function statistics()
-    {
-        if (!Auth::user()->user_group === 'admin') {
-            abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
-        }
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
+    }
 
-        // Havi statisztikák
-        $monthlySurveys = Survey::select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as count'))
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
+    // Összes kitöltött kérdőív
+    $completedSurveysCount = Survey::count();
+
+    // Folyamatban lévő kitöltések
+    $inProgressSurveysCount = TemporarySurvey::where('is_completed', false)->count();
+
+    // Intézmények száma
+    $institutionsCount = CulturalInstitution::count();
+
+    // Intézmények, amelyek már kitöltötték a kérdőívet
+    $completedInstitutionsCount = CulturalInstitution::where('survey_completed', true)->count();
+
+    // Havi statisztikák az elmúlt 12 hónapra
+    $startDate = Carbon::now()->subMonths(12);
+    $endDate = Carbon::now();
+
+    $monthlySurveys = Survey::select(
+            DB::raw('YEAR(created_at) as year'),
+            DB::raw('MONTH(created_at) as month'),
+            DB::raw('count(*) as count')
+        )
+        ->where('created_at', '>=', $startDate)
+        ->groupBy('year', 'month')
+        ->orderBy('year')
+        ->orderBy('month')
+        ->get();
+
+    // Adatok előkészítése a grafikonhoz
+    $chartLabels = [];
+    $chartData = [];
+
+    // Létrehozzuk a hónapokat az utolsó 12 hónapra
+    $currentDate = Carbon::now()->startOfMonth()->subMonths(11);
+
+    for ($i = 0; $i < 12; $i++) {
+        $yearMonth = $currentDate->format('Y-m');
+        $monthName = $currentDate->translatedFormat('Y. F');
+
+        $chartLabels[] = $monthName;
+
+        // Keressük meg az adott hónap adatait
+        $monthData = $monthlySurveys->first(function ($item) use ($currentDate) {
+            return $item->year == $currentDate->year && $item->month == $currentDate->month;
+        });
+
+        $chartData[] = $monthData ? $monthData->count : 0;
+
+        $currentDate->addMonth();
+    }
+
+    // Segítségkérések száma
+    $wantHelpCount = Survey::where('want_help', 'igen')->count();
+    $probablyHelpCount = Survey::where('want_help', 'bizonytalan')->count();
+    $wantHelpPercentage = $completedSurveysCount > 0 ? round(($wantHelpCount / $completedSurveysCount) * 100, 1) : 0;
+
+    // Rendezvény szoftverek statisztikája
+    $eventSoftwareStats = [];
+    $eventSoftwares = Survey::whereNotNull('event_software')
+        ->where('event_software', '!=', 'N/A')
+        ->where('event_software', '!=', '-')
+        ->select('event_software', DB::raw('count(*) as count'))
+        ->groupBy('event_software')
+        ->orderBy('count', 'desc')
+        ->take(10)
+        ->get();
+
+    foreach ($eventSoftwares as $software) {
+        $eventSoftwareStats[$software->event_software] = $software->count;
+    }
+
+    // Top 5 információáramlás probléma
+    $infoFlowIssuesStats = [];
+    if (Schema::hasColumn('surveys', 'info_flow_issues')) {
+        $infoFlowIssues = Survey::whereNotNull('info_flow_issues')
+            ->select('info_flow_issues', DB::raw('count(*) as count'))
+            ->groupBy('info_flow_issues')
+            ->orderBy('count', 'desc')
+            ->take(5)
             ->get();
 
-        return view('admin.statistics', compact('monthlySurveys'));
+        foreach ($infoFlowIssues as $issue) {
+            $infoFlowIssuesStats[$issue->info_flow_issues] = $issue->count;
+        }
     }
+
+    // Összegyűjtjük a szükséges adatokat a nézetben
+    $stats = [
+        'completedSurveysCount' => $completedSurveysCount,
+        'inProgressSurveysCount' => $inProgressSurveysCount,
+        'institutionsCount' => $institutionsCount,
+        'completedInstitutionsCount' => $completedInstitutionsCount,
+        'completionPercentage' => $institutionsCount > 0 ? round(($completedInstitutionsCount / $institutionsCount) * 100, 1) : 0,
+        'wantHelpCount' => $wantHelpCount,
+        'probalyHelpCount' => $probablyHelpCount,
+        'wantHelpPercentage' => $wantHelpPercentage,
+        'chartLabels' => $chartLabels,
+        'chartData' => $chartData,
+        'eventSoftwareStats' => $eventSoftwareStats,
+        'infoFlowIssuesStats' => $infoFlowIssuesStats,
+    ];
+
+    return view('admin.statistics', compact('stats'));
+}
 
     /**
      * Settings - Admin beállítások
@@ -578,16 +677,16 @@ public function exportSurveys()
      * Delete Temporary Survey - Ideiglenes kérdőív törlése
      */
     public function destroyTemporarySurvey($id)
-    {
-        if (!Auth::user()->user_group === 'admin') {
-            abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
-        }
-
-        $survey = TemporarySurvey::findOrFail($id);
-        $survey->delete();
-
-        return redirect()->route('admin.temporary-surveys')->with('success', 'Ideiglenes kérdőív sikeresen törölve!');
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
     }
+
+    $survey = TemporarySurvey::findOrFail($id);
+    $survey->delete();
+
+    return redirect()->route('admin.temporary-surveys')->with('success', 'Ideiglenes kérdőív sikeresen törölve!');
+}
 
     /**
      * Make Admin - Felhasználó admin jogosultságúvá tétele
@@ -641,55 +740,181 @@ public function exportSurveys()
 
 
 
+
+
+
+
+
+
+
 /**
- * Export surveys to Excel file
- *
- * @param \Illuminate\Database\Eloquent\Collection $surveys
- * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
- */
-private function exportSurveysFaszsag($surveys)
-{
-    $fileName = 'surveys_' . date('Y-m-d') . '.xlsx';
+     * Eredménylevelek küldése oldal
+     */
+    public function resultLetters()
+    {
+        if (Auth::user()->user_group !== 'admin') {
+            abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
+        }
 
-    $spreadsheet = new Spreadsheet();
-    $sheet = $spreadsheet->getActiveSheet();
+        // Lekérdezzük a surveys-okat email címekkel
+        $surveysWithEmail = Survey::whereNotNull('contact')
+            ->where('contact', '!=', '')
+            ->where('contact', 'LIKE', '%@%')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    // Fejlécek
-    $sheet->setCellValue('A1', 'ID');
-    $sheet->setCellValue('B1', 'Kérdőív neve');
-    $sheet->setCellValue('C1', 'Létrehozó');
-    $sheet->setCellValue('D1', 'Létrehozva');
-    $sheet->setCellValue('E1', 'Kitöltések');
-    $sheet->setCellValue('F1', 'Státusz');
+        // Szűrjük az érvényes email címeket és frissítsük a statisztikákat
+        $validSurveys = $surveysWithEmail->filter(function ($survey) {
+            return filter_var($survey->contact, FILTER_VALIDATE_EMAIL);
+        });
 
-    // Adatok
-    $row = 2;
-    foreach ($surveys as $survey) {
-        $responsesCount = Response::where('survey_id', $survey->id)->count();
+        // Statisztikák
+        $totalSurveys = Survey::count();
+        $surveysWithValidEmail = $validSurveys->count();
+        $surveysWithoutEmail = $totalSurveys - $surveysWithValidEmail;
+        $lettersSent = Survey::where('result_letter_sent', true)->count();
+        $lettersNotSent = $surveysWithValidEmail - $lettersSent;
 
-        $sheet->setCellValue('A' . $row, $survey->id);
-        $sheet->setCellValue('B' . $row, $survey->name);
-        $sheet->setCellValue('C' . $row, $survey->user->name ?? 'N/A');
-        $sheet->setCellValue('D' . $row, $survey->created_at->format('Y-m-d H:i'));
-        $sheet->setCellValue('E' . $row, $responsesCount);
-        $sheet->setCellValue('F' . $row, $survey->is_active ? 'Aktív' : 'Inaktív');
-
-        $row++;
+        return view('admin.result-letters.index', compact(
+            'validSurveys',
+            'totalSurveys',
+            'surveysWithValidEmail',
+            'surveysWithoutEmail',
+            'lettersSent',
+            'lettersNotSent'
+        ));
     }
 
-    // Táblázat formázása
-    foreach(range('A','F') as $columnID) {
-        $sheet->getColumnDimension($columnID)->setAutoSize(true);
+    /**
+     * Eredménylevél küldése egy intézménynek
+     */
+    public function sendResultLetter($id)
+    {
+        if (Auth::user()->user_group !== 'admin') {
+            abort(403, 'Nincs jogosultsága ehhez a művelethez.');
+        }
+
+        try {
+            $survey = Survey::findOrFail($id);
+
+            // Ellenőrizzük az email címet
+            if (empty($survey->contact) || !filter_var($survey->contact, FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Érvénytelen email cím: ' . $survey->contact
+                ], 400);
+            }
+
+            // Ellenőrizzük, hogy már elküldtük-e
+            if ($survey->result_letter_sent) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Az eredménylevél már el lett küldve erre a címre: ' . $survey->contact
+                ], 400);
+            }
+
+            // Email küldése közvetlenül
+            \Illuminate\Support\Facades\Mail::to($survey->contact)->send(new \App\Mail\SurveyResultMail($survey));
+
+            // Jelöljük meg, hogy elküldtük
+            $survey->update([
+                'result_letter_sent' => true,
+                'result_letter_sent_at' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Az eredménylevél sikeresen elküldve: ' . $survey->institution_name
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Eredménylevél küldési hiba: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt az email küldése során: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    // Excel fájl létrehozása
-    $writer = new Xlsx($spreadsheet);
-    $tempFile = tempnam(sys_get_temp_dir(), 'survey_export_');
-    $writer->save($tempFile);
+    /**
+     * Összes eredménylevél küldése
+     */
+    public function sendAllResultLetters()
+    {
+        if (Auth::user()->user_group !== 'admin') {
+            abort(403, 'Nincs jogosultsága ehhez a művelethez.');
+        }
 
-    return response()->download($tempFile, $fileName, [
-        'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ])->deleteFileAfterSend(true);
-}
+        try {
+            // Lekérdezzük az érvényes email címekkel rendelkező surveys-okat, amelyeknek még nem küldtük el
+            $surveysToSend = Survey::whereNotNull('contact')
+                ->where('contact', '!=', '')
+                ->where('contact', 'LIKE', '%@%')
+                ->where('result_letter_sent', false)
+                ->get();
+
+            $validSurveys = $surveysToSend->filter(function ($survey) {
+                return filter_var($survey->contact, FILTER_VALIDATE_EMAIL);
+            });
+
+            $sentCount = 0;
+            $errors = [];
+
+            foreach ($validSurveys as $survey) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($survey->contact)->send(new \App\Mail\SurveyResultMail($survey));
+
+                    $survey->update([
+                        'result_letter_sent' => true,
+                        'result_letter_sent_at' => now()
+                    ]);
+
+                    $sentCount++;
+                } catch (\Exception $e) {
+                    $errors[] = $survey->institution_name . ': ' . $e->getMessage();
+                    \Illuminate\Support\Facades\Log::error('Eredménylevél küldési hiba (' . $survey->institution_name . '): ' . $e->getMessage());
+                }
+            }
+
+            $message = "Eredménylevelek sikeresen elküldve: {$sentCount} db levél";
+            if (!empty($errors)) {
+                $message .= "\nHibák: " . implode(', ', $errors);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'sent_count' => $sentCount,
+                'error_count' => count($errors)
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Tömeges eredménylevél küldési hiba: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Hiba történt a tömeges küldés során: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Előnézet az eredménylevélről
+     */
+    public function previewResultLetter($id)
+    {
+        if (!Auth::user()->user_group === 'admin') {
+            abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
+        }
+
+        $survey = Survey::findOrFail($id);
+
+        return view('emails.survey-result', [
+            'institutionName' => $survey->institution_name,
+            'survey' => $survey,
+            'preview' => true
+        ]);
+    }
+
+
 
 }

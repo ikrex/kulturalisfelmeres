@@ -6,6 +6,7 @@ use App\Models\TemporarySurvey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 
 class TemporarySurveyController extends Controller
@@ -118,4 +119,51 @@ class TemporarySurveyController extends Controller
 
         return view('admin.temporary-surveys.show', compact('temporarySurvey', 'completedSurvey'));
     }
+
+/**
+ * Temporary Surveys - Folyamatban lévő kitöltések listája
+ */
+public function temporarySurveys()
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
+    }
+
+    $surveys = TemporarySurvey::where('is_completed', false)
+        ->latest()
+        ->paginate(15);
+
+    return view('admin.temporary-surveys.index', compact('surveys'));
+}
+
+/**
+ * Temporary Survey - Egy folyamatban lévő kitöltés részletes nézete
+ */
+public function showTemporarySurvey($id)
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
+    }
+
+    $survey = TemporarySurvey::findOrFail($id);
+
+    return view('admin.temporary-surveys.show', compact('survey'));
+}
+
+/**
+ * Delete Temporary Survey - Ideiglenes kérdőív törlése
+ */
+public function destroyTemporarySurvey($id)
+{
+    if (!Auth::user()->user_group === 'admin') {
+        abort(403, 'Nincs jogosultsága az oldal megtekintéséhez.');
+    }
+
+    $survey = TemporarySurvey::findOrFail($id);
+    $survey->delete();
+
+    return redirect()->route('admin.temporary-surveys')->with('success', 'Ideiglenes kérdőív sikeresen törölve!');
+}
+
+
 }
